@@ -13,6 +13,12 @@ https://docs.google.com/presentation/d/17oAaOK_0mSN_eWa_EXUBHH11QV_l-B-R3xlaz5cI
 
 https://github.com/dharshinimohan31/VitaTwin-AI/blob/main/VitaTwin_AI_Architecture_Diagram.pdf
 
+## Open-Source License
+
+VitaTwin AI is released under the MIT License. See the [LICENSE](./LICENSE) file for the complete license terms.
+
+**Disclaimer:** VitaTwin AI is a research and educational prototype, not a medical device. It is not intended for medical diagnosis or treatment.
+
 
 > ⚠️ **This is a research/educational prototype.** It is not a medical
 > diagnosis system, does not replace doctors, and does not provide
