@@ -1,0 +1,9 @@
+patient_id,diagnosis,diabetes_duration_years,hba1c_pct,medication,record_date,data_source
+VT001,Type 2 Diabetes Mellitus,1,9.2,none,2026-08-01,synthetic
+VT002,Type 2 Diabetes Mellitus,6,8.4,metformin+sulfonylurea,2026-08-01,synthetic
+VT003,Type 2 Diabetes Mellitus,1,7.2,insulin,2026-08-01,synthetic
+VT004,Type 2 Diabetes Mellitus,12,9.7,metformin,2026-08-01,synthetic
+VT005,Type 2 Diabetes Mellitus,2,7.5,metformin+sulfonylurea,2026-08-01,synthetic
+VT006,Type 2 Diabetes Mellitus,12,6.6,none,2026-08-01,synthetic
+VT007,Pre-diabetes (impaired glucose tolerance),7,6.3,metformin,2026-08-01,synthetic
+VT008,Type 2 Diabetes Mellitus,5,7.5,metformin,2026-08-01,synthetic

@@ -1,0 +1,70 @@
+{
+  "prediction_horizon_minutes": 120,
+  "excursion_threshold_mgdl": 180.0,
+  "split": {
+    "train_rows": 22520,
+    "val_rows": 4840,
+    "test_rows": 4648,
+    "method": "per-patient chronological 70/15/15 split (no shuffling, no leakage)"
+  },
+  "regression": {
+    "mae": 11.013,
+    "rmse": 16.984,
+    "r2": 0.6576,
+    "n": 4648,
+    "model_selected": "random_forest",
+    "val_mae_by_candidate": {
+      "ridge": 15.899,
+      "random_forest": 10.694
+    }
+  },
+  "classification": {
+    "accuracy": 0.8294,
+    "precision": 0.4841,
+    "recall": 0.8535,
+    "f1": 0.6178,
+    "n": 4648,
+    "positive_rate": 0.1616,
+    "roc_auc": 0.9193,
+    "pr_auc": 0.669,
+    "model_selected": "random_forest",
+    "val_roc_auc_by_candidate": {
+      "logistic_regression": 0.8491,
+      "random_forest": 0.9179
+    }
+  },
+  "per_patient_test_mae": {
+    "VT001": {
+      "n_test_rows": 581,
+      "mae": 12.87
+    },
+    "VT002": {
+      "n_test_rows": 581,
+      "mae": 10.76
+    },
+    "VT003": {
+      "n_test_rows": 581,
+      "mae": 9.6
+    },
+    "VT004": {
+      "n_test_rows": 581,
+      "mae": 12.41
+    },
+    "VT005": {
+      "n_test_rows": 581,
+      "mae": 10.6
+    },
+    "VT006": {
+      "n_test_rows": 581,
+      "mae": 9.39
+    },
+    "VT007": {
+      "n_test_rows": 581,
+      "mae": 11.52
+    },
+    "VT008": {
+      "n_test_rows": 581,
+      "mae": 10.97
+    }
+  }
+}

@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>VitaTwin AI — Predict. Simulate. Prevent.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root{
+    /* VitaTwin AI — Berry Red + Vanilla + Espresso theme */
+    --bg: #F4EDDA;
+    --panel: #FFFFFF;
+    --panel-2: #F8F3E8;
+    --glass: rgba(255,255,255,.88);
+    --glass-border: rgba(122,73,85,.16);
+    --line: #E4D8D0;
+    --text: #30252A;
+    --text-dim: #66545A;
+    --text-faint: #806F73;
+    --teal: #7A4955;
+    --teal-dim: #613844;
+    --violet: #B77B89;
+    --low: #218653;
+    --mod: #A96508;
+    --high: #B42336;
+    --radius: 14px;
+    --risk-color: var(--teal);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:
+      radial-gradient(1100px 650px at 20% -10%, rgba(122,73,85,.12), transparent 60%),
+      radial-gradient(900px 600px at 100% 10%, rgba(183,123,137,.12), transparent 55%),
+      radial-gradient(700px 500px at 50% 110%, rgba(244,237,218,.75), transparent 55%),
+      var(--bg);
+    color:var(--text); font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    transition:background .6s ease;
+  }
+  /* Premium glass surface — used by every .panel throughout the app */
+  .panel{
+    background:var(--glass); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+    border:1px solid var(--glass-border); border-radius:18px; padding:20px;
+    box-shadow:0 10px 30px rgba(74,47,53,.09), inset 0 1px 0 rgba(255,255,255,.8);
+  }
+  h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  a{color:inherit;}
+
+  .app{display:grid; grid-template-columns:240px 1fr; min-height:100vh;}
+
+  /* ---------- Left rail ---------- */
+  .rail{
+    background:var(--panel-2); border-right:1px solid var(--line);
+    padding:22px 16px; display:flex; flex-direction:column; gap:22px;
+  }
+  .brand{display:flex; align-items:center; gap:10px; padding:0 4px;}
+  .brand .mark{width:30px;height:30px;border-radius:8px;
+    background:linear-gradient(135deg,var(--teal),var(--teal-dim));
+    display:flex;align-items:center;justify-content:center;font-weight:700;color:#FFFFFF;font-size:14px;}
+  .brand .name{font-weight:600; font-size:16.5px; letter-spacing:.2px;}
+  .brand .tag{font-size:10.5px; color:var(--text-faint); margin-top:-2px;}
+
+  .rail-label{font-size:11px; color:var(--text-faint); padding:0 4px; letter-spacing:.3px;}
+  .patients{display:flex; flex-direction:column; gap:4px;}
+  .patient-btn{
+    display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:10px;
+    background:transparent; border:1px solid transparent; cursor:pointer; text-align:left;
+    color:var(--text-dim); font-size:13px;
+  }
+  .patient-btn:hover{background:rgba(48,37,42,.035);}
+  .patient-btn.active{background:rgba(122,73,85,.09); border-color:rgba(122,73,85,.28); color:var(--text);}
+  .p-avatar{width:26px;height:26px;border-radius:7px;background:var(--panel);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:10.5px;color:var(--text-dim);flex-shrink:0;}
+  .patient-btn.active .p-avatar{background:var(--teal-dim); color:#FFFFFF; border-color:transparent;}
+
+  .rail-footer{margin-top:auto; font-size:10.5px; color:var(--text-faint); line-height:1.5; padding:10px;
+    border:1px solid var(--line); border-radius:10px; background:rgba(48,37,42,.025);}
+
+  /* ---------- Main ---------- */
+  .main{padding:22px 28px 40px; max-width:1180px;}
+  .topbar{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; gap:20px;}
+  .disclaimer{
+    font-size:11.5px; color:#80520C; background:rgba(245,166,35,.12); border:1px solid rgba(169,101,8,.25);
+    padding:7px 12px; border-radius:9px; max-width:460px; line-height:1.45;
+  }
+  .patient-id{font-size:12px; color:var(--text-faint);}
+  .patient-head h1{font-size:22px; margin:2px 0 2px; font-weight:600;}
+  .patient-meta{font-size:12.5px; color:var(--text-dim);}
+
+  /* ---------- Spatial 3D hero ---------- */
+  .twin-hero{display:grid; grid-template-columns:300px 1fr 300px; gap:20px; align-items:center;
+    min-height:400px; margin:24px 0; position:relative;}
+  .twin-stage{position:relative; height:400px; display:flex; align-items:center; justify-content:center;}
+  .twin3d-canvas{width:100%; height:100%; cursor:grab;}
+  .twin3d-canvas canvas{display:block; width:100% !important; height:100% !important;}
+  .twin-status-badge{position:absolute; top:6px; left:50%; transform:translateX(-50%);
+    display:flex; align-items:center; gap:6px; font-size:10.5px; font-weight:600; letter-spacing:.5px;
+    color:var(--risk-color); padding:5px 12px; border-radius:20px; background:rgba(48,37,42,.035);
+    border:1px solid var(--glass-border); white-space:nowrap; z-index:2;}
+  .twin-status-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--risk-color);
+    box-shadow:0 0 8px var(--risk-color); animation:blink 1.4s ease-in-out infinite;}
+  .twin-fallback{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    border-radius:50%; background:radial-gradient(circle, color-mix(in srgb, var(--risk-color) 25%, transparent), transparent 70%);
+    pointer-events:none;}
+  .twin-fallback .ring{width:62%; height:62%; border-radius:50%; border:1.5px solid var(--risk-color);
+    opacity:.5; animation:slowSpin 14s linear infinite;}
+  @keyframes slowSpin{to{transform:rotate(360deg);}}
+
+  .vitals-panel .vitals-top{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:14px;}
+  .vitals-top .label{font-size:12px; color:var(--text-dim);}
+  .vitals-top .big{font-family:'IBM Plex Mono',monospace; font-size:40px; font-weight:600; line-height:1;}
+  .vitals-top .unit{font-size:14px; color:var(--text-dim); font-weight:400;}
+  .vitals-top .dev{font-size:12px; margin-top:4px;}
+  .dev.up{color:var(--mod);} .dev.down{color:var(--teal);} .dev.flat{color:var(--text-faint);}
+  #glucoseChart{max-height:120px;}
+
+  .stat-row{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:16px;}
+  .stat-tile{background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:10px 12px;}
+  .stat-tile .t-label{font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.4px;}
+  .stat-tile .t-value{font-family:'IBM Plex Mono',monospace; font-size:17px; margin-top:3px;}
+
+  /* ---------- Risk panel ---------- */
+  .risk-panel{display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; position:relative; overflow:hidden;
+    transition:border-color .4s ease;}
+  .risk-panel::before{content:""; position:absolute; inset:-40%; opacity:.35; filter:blur(40px);
+    background:radial-gradient(circle, var(--risk-color,var(--teal)), transparent 65%); transition:background .4s ease;}
+  .risk-ring-wrap{position:relative; width:148px; height:148px; z-index:1;}
+  .risk-ring-wrap svg{transform:rotate(-90deg); width:100%; height:100%;}
+  .risk-ring-wrap .track{fill:none; stroke:var(--line); stroke-width:7;}
+  .risk-ring-wrap .arc{fill:none; stroke:var(--risk-color,var(--teal)); stroke-width:7; stroke-linecap:round;
+    transition:stroke-dashoffset .6s cubic-bezier(.4,0,.2,1), stroke .4s ease; filter:drop-shadow(0 0 7px var(--risk-color,var(--teal)));}
+  .risk-ring-center{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;}
+  .risk-ring-center .pct{font-family:'IBM Plex Mono',monospace; font-size:26px; font-weight:600; transition:color .4s ease;}
+  .risk-panel.pulse .risk-ring-wrap{animation:pulseGlow 1.6s ease-in-out infinite;}
+  @keyframes pulseGlow{0%,100%{filter:drop-shadow(0 0 0px var(--risk-color))} 50%{filter:drop-shadow(0 0 14px var(--risk-color))}}
+  .risk-cat{z-index:1; margin-top:14px; font-size:15px; font-weight:600; letter-spacing:.3px; color:var(--risk-color,var(--teal)); transition:color .4s ease;}
+  .risk-sub{z-index:1; font-size:11.5px; color:var(--text-dim); margin-top:3px;}
+  .risk-horizon{z-index:1; margin-top:14px; font-size:11px; color:var(--text-faint); border-top:1px solid var(--line); padding-top:10px; width:100%;}
+  .big, .t-value{transition:color .3s ease;}
+
+  /* ---------- Tabs ---------- */
+  .tabs{display:flex; gap:6px; margin:24px 0 14px; border-bottom:1px solid var(--line);}
+  .tab-btn{background:none;border:none;color:var(--text-faint);font-size:13px;font-family:inherit;
+    padding:9px 4px; margin-right:18px; cursor:pointer; border-bottom:2px solid transparent;
+    display:inline-flex; align-items:center; gap:7px; transition:color .2s ease;}
+  .tab-btn:hover{color:var(--text-dim);}
+  .tab-btn.active{color:var(--text); border-color:var(--teal);}
+  .nav-ic{width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0;}
+
+  /* ---------- Premium patient header ---------- */
+  .patient-id{font-size:11px; color:var(--teal); text-transform:uppercase; letter-spacing:1.2px; font-weight:600;}
+  .patient-head h1{font-size:25px; margin:4px 0 4px; font-weight:600; letter-spacing:-.2px;}
+  .patient-meta{font-size:12.5px; color:var(--text-dim); display:flex; gap:6px; flex-wrap:wrap;}
+  .patient-meta span{background:rgba(48,37,42,.045); border:1px solid var(--glass-border); padding:2px 9px; border-radius:20px;}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block; animation:fadeSlideIn .35s ease;}
+  @keyframes fadeSlideIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+  .skeleton{background:linear-gradient(90deg, var(--panel-2) 25%, #F0E7D9 37%, var(--panel-2) 63%);
+    background-size:400% 100%; animation:shimmer 1.4s ease infinite; border-radius:6px; display:inline-block;}
+  @keyframes shimmer{0%{background-position:100% 0} 100%{background-position:0 0}}
+
+  /* ---------- Live Twin replay ---------- */
+  .replay-bar{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:18px;}
+  .replay-btn{background:var(--panel-2); border:1px solid var(--line); color:var(--text); width:36px; height:36px;
+    border-radius:9px; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center;}
+  .replay-btn:hover{border-color:var(--teal);}
+  .replay-btn.primary{background:linear-gradient(135deg,var(--teal),var(--teal-dim)); color:#FFFFFF; border:none; width:auto; padding:0 16px; font-weight:600; font-size:13px; gap:6px;}
+  .replay-scrub{flex:1; min-width:160px; accent-color:var(--teal);}
+  .replay-speed{background:var(--panel-2); border:1px solid var(--line); color:var(--text-dim); border-radius:8px; padding:7px 10px; font-size:12px; font-family:inherit;}
+  .replay-ts{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--text-dim); min-width:150px;}
+  .replay-progress-chart{position:relative;}
+  .replay-progress-chart .cursor-line{position:absolute; top:0; bottom:0; width:2px; background:var(--teal); box-shadow:0 0 6px var(--teal); pointer-events:none; transition:left .05s linear;}
+  .live-badge{display:inline-flex; align-items:center; gap:5px; font-size:10.5px; color:var(--high); font-weight:600; letter-spacing:.3px;}
+  .live-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--high); animation:blink 1s step-start infinite;}
+  @keyframes blink{50%{opacity:.2}}
+
+  .factor-list{display:flex; flex-direction:column; gap:8px;}
+  .factor{display:flex; gap:10px; align-items:flex-start; font-size:13px; padding:10px 12px;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:10px;}
+  .factor .arrow{font-family:'IBM Plex Mono',monospace; font-weight:600;}
+  .factor .arrow.up{color:var(--high);} .factor .arrow.down{color:var(--teal);}
+  .factor-note{font-size:11px; color:var(--text-faint); margin-top:10px;}
+  .shap-factor{flex-direction:row; align-items:center;}
+  .shap-bar-track{height:5px; background:rgba(48,37,42,.08); border-radius:3px; margin-top:5px; overflow:hidden;}
+  .shap-bar-fill{height:100%; border-radius:3px; transition:width .5s cubic-bezier(.4,0,.2,1);}
+
+  .two-col{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+
+  /* What-if */
+  .sim-controls{display:flex; flex-direction:column; gap:16px;}
+  .slider-row label{font-size:12.5px; color:var(--text-dim); display:block; margin-bottom:6px;}
+  .slider-row input[type=range]{width:100%; accent-color:var(--teal);}
+  .slider-val{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--teal); float:right;}
+  .run-btn{margin-top:4px; background:linear-gradient(135deg,var(--teal),var(--teal-dim)); color:#FFFFFF;
+    border:none; font-weight:600; font-size:13px; padding:10px 18px; border-radius:9px; cursor:pointer;}
+  .run-btn:disabled{opacity:.5; cursor:default;}
+  .sim-result{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .sim-card{background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:14px;}
+  .sim-card.sim-sim{border-color:rgba(122,73,85,.30);}
+  .sim-card h4{margin:0 0 8px; font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-faint); font-weight:600;}
+  .sim-card .v{font-family:'IBM Plex Mono',monospace; font-size:20px;}
+  .sim-card .r{font-size:12px; margin-top:6px;}
+  .sim-disclaimer{font-size:11px; color:#F5C66B; margin-top:12px; line-height:1.5;}
+
+  /* Prevent */
+  .rec{display:flex; gap:10px; padding:12px; border-radius:10px; background:var(--panel-2); border:1px solid var(--line); margin-bottom:8px;}
+  .rec .dot{width:8px;height:8px;border-radius:50%; margin-top:5px; flex-shrink:0;}
+  .rec.high .dot{background:var(--high);} .rec.medium .dot{background:var(--mod);} .rec.low .dot{background:var(--low);}
+  .rec .rtext{font-size:13.5px;} .rec .rreason{font-size:11.5px; color:var(--text-faint); margin-top:3px;}
+
+  /* History table */
+  table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  th{text-align:left; font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.3px;
+     border-bottom:1px solid var(--line); padding:6px 10px;}
+  td{padding:7px 10px; border-bottom:1px solid rgba(48,37,42,.035); font-family:'IBM Plex Mono',monospace; color:var(--text-dim);}
+
+  .loading, .empty{color:var(--text-faint); font-size:12.5px; padding:20px 0;}
+  ::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px;}
+
+  @media (max-width: 1000px){
+    .twin-hero{grid-template-columns:1fr; min-height:auto;}
+    .twin-stage{order:-1; height:260px;}
+  }
+  @media (max-width: 880px){
+    .app{grid-template-columns:1fr;}
+    .rail{flex-direction:row; overflow-x:auto;}
+    .two-col{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="brand">
+      <div class="mark">V</div>
+      <div><div class="name">VitaTwin AI</div><div class="tag">Predict · Simulate · Prevent</div></div>
+    </div>
+    <div>
+      <div class="rail-label">PATIENTS</div>
+      <div class="patients" id="patientList"><div class="loading">Loading…</div></div>
+    </div>
+    <div class="rail-footer">Research/educational prototype. Synthetic data only. Not a medical device — see docs/safety.md.</div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="patient-head">
+        <div class="patient-id" id="patientId">—</div>
+        <h1 id="patientName">Select a patient</h1>
+        <div class="patient-meta" id="patientMeta"></div>
+      </div>
+      <div class="disclaimer">Research/educational prototype using synthetic data. Predictions are experimental model outputs — not medical diagnoses or treatment recommendations.</div>
+    </div>
+
+    <div class="twin-hero">
+      <div class="panel vitals-panel">
+        <div class="vitals-top">
+          <div>
+            <div class="label">Current glucose</div>
+            <div><span class="big" id="glucoseVal">—</span><span class="unit"> mg/dL</span></div>
+            <div class="dev" id="baselineDev"></div>
+          </div>
+          <div style="text-align:right">
+            <div class="label">Last reading</div>
+            <div class="mono" id="lastTs" style="font-size:12px;color:var(--text-dim)">—</div>
+          </div>
+        </div>
+        <canvas id="glucoseChart" height="60"></canvas>
+        <div class="stat-row" id="statRow">
+          <div class="stat-tile"><div class="t-label">Heart rate</div><div class="t-value">—</div></div>
+          <div class="stat-tile"><div class="t-label">HRV</div><div class="t-value">—</div></div>
+          <div class="stat-tile"><div class="t-label">Activity</div><div class="t-value">—</div></div>
+          <div class="stat-tile"><div class="t-label">Sleep</div><div class="t-value">—</div></div>
+        </div>
+      </div>
+
+      <div class="twin-stage">
+        <div class="twin-status-badge"><span class="dot"></span><span id="twinStatusText">AI DIGITAL TWIN ACTIVE</span></div>
+        <div id="twin3d" class="twin3d-canvas"></div>
+      </div>
+
+      <div class="panel risk-panel" id="riskPanel">
+        <div class="risk-ring-wrap">
+          <svg viewBox="0 0 120 120">
+            <circle class="track" cx="60" cy="60" r="52"></circle>
+            <circle class="arc" id="riskArc" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="326.7"></circle>
+          </svg>
+          <div class="risk-ring-center"><span class="pct" id="riskPct">—</span></div>
+        </div>
+        <div class="risk-cat" id="riskCat">—</div>
+        <div class="risk-sub" id="riskTrend">—</div>
+        <div class="risk-horizon">Predicted glucose (+2h): <span class="mono" id="predGlucose">—</span> mg/dL</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="why"><svg class="nav-ic" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a6 6 0 0 0-3.5 10.9c.6.44 1 1.2 1 2.1h5c0-.9.4-1.66 1-2.1A6 6 0 0 0 12 2Z"/></svg>Why this prediction?</button>
+      <button class="tab-btn" data-tab="whatif"><svg class="nav-ic" viewBox="0 0 24 24"><path d="M4 6h6M4 12h10M4 18h4"/><circle cx="14" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><circle cx="20" cy="12" r="2"/></svg>What-If Simulator</button>
+      <button class="tab-btn" data-tab="prevent"><svg class="nav-ic" viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 8.4 8 11 4.6-2.6 8-6 8-11V5l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg>Prevent</button>
+      <button class="tab-btn" data-tab="history"><svg class="nav-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>History</button>
+      <button class="tab-btn" data-tab="live"><svg class="nav-ic" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 2v10l6 3"/></svg>Live Twin <span class="live-badge" style="margin-left:5px;"><span class="dot"></span>LIVE</span></button>
+    </div>
+
+    <div class="tab-panel active" id="tab-why">
+      <div class="two-col">
+        <div class="panel">
+          <h3 style="margin-top:0;font-size:14px;">Risk engine factors</h3>
+          <div class="factor-list" id="riskFactors"><div class="loading">Loading…</div></div>
+        </div>
+        <div class="panel">
+          <h3 style="margin-top:0;font-size:14px;">Model explanation (SHAP)</h3>
+          <div class="factor-list" id="shapFactors"><div class="loading">Loading…</div></div>
+          <div class="factor-note" id="shapMethod"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-whatif">
+      <div class="two-col">
+        <div class="panel">
+          <h3 style="margin-top:0;font-size:14px;">Adjust variables</h3>
+          <div class="sim-controls" id="simControls"><div class="loading">Loading…</div></div>
+          <button class="run-btn" id="runSimBtn">Run Simulation</button>
+        </div>
+        <div class="panel">
+          <h3 style="margin-top:0;font-size:14px;">Baseline vs. Simulated</h3>
+          <div id="simResultWrap"><div class="empty">Adjust a variable and run the simulation.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-prevent">
+      <div class="panel">
+        <h3 style="margin-top:0;font-size:14px;">Preventive recommendations</h3>
+        <div id="recList"><div class="loading">Loading…</div></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-history">
+      <div class="panel">
+        <h3 style="margin-top:0;font-size:14px;">Recent observations</h3>
+        <div style="max-height:340px; overflow:auto;">
+          <table>
+            <thead><tr><th>Timestamp</th><th>Glucose</th><th>HR</th><th>HRV</th><th>Steps</th><th>Activity</th></tr></thead>
+            <tbody id="historyBody"><tr><td colspan="6" class="loading">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-live">
+      <div class="panel">
+        <h3 style="margin-top:0;font-size:14px;">Live Twin — 24h replay</h3>
+        <p style="font-size:12px; color:var(--text-dim); margin-top:-6px;">
+          Replays this patient's last 24 hours, 5 minutes at a time. At every step the Digital Twin updates and the
+          SAME trained model re-predicts and re-assesses risk live, above — this is real recomputation, not a canned animation.
+        </p>
+        <div class="replay-bar">
+          <button class="replay-btn primary" id="playBtn">▶ Play</button>
+          <button class="replay-btn" id="resetBtn" title="Reset to start">⟲</button>
+          <input type="range" class="replay-scrub" id="replayScrub" min="0" max="0" value="0">
+          <span class="replay-ts" id="replayTs">—</span>
+          <select class="replay-speed" id="replaySpeed">
+            <option value="400">1x</option>
+            <option value="150" selected>4x</option>
+            <option value="50">12x</option>
+          </select>
+        </div>
+        <div class="replay-progress-chart">
+          <canvas id="replayChart" height="70"></canvas>
+          <div class="cursor-line" id="replayCursor" style="left:0;"></div>
+        </div>
+        <div id="replayStatus" class="loading" style="margin-top:10px;">Select a patient to load their replay window…</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const API = "http://127.0.0.1:8000";
+const RISK_COLOR = { LOW: "#34C77B", MODERATE: "#F5A623", HIGH: "#E8495C" };
+let currentPatient = null;
+let chart = null;
+let simOptions = null;
+let latestTwin = null;
+let latestPred = null;
+
+/* ---------------- 3D Digital Twin visualization ---------------- */
+/* Abstract metabolic-core visualization: rotating wireframe core + glow +
+   two orbital data rings + a drifting particle field, tinted by the
+   patient's current risk color. Purely decorative — reads no app state
+   beyond the color it's told to display via updateTwin3DColor(). If
+   Three.js fails to load (blocked CDN, offline, ad-blocker), falls back
+   to a lightweight CSS-only pulsing ring so the rest of the dashboard
+   keeps working exactly as before. */
+let twin3D = null;
+
+function initTwin3D() {
+  const container = document.getElementById("twin3d");
+  if (!container) return;
+  if (typeof THREE === "undefined") { renderTwinFallback(); return; }
+
+  try {
+    const width = container.clientWidth || 360;
+    const height = container.clientHeight || 360;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+    camera.position.set(0, 0, 5.2);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    renderer.setSize(width, height);
+    container.innerHTML = "";
+    container.appendChild(renderer.domElement);
+
+    const accent = new THREE.Color(RISK_COLOR.LOW);
+
+    const coreGeo = new THREE.IcosahedronGeometry(1.15, 1);
+    const coreMat = new THREE.MeshBasicMaterial({ color: accent, wireframe: true, transparent: true, opacity: 0.85 });
+    const core = new THREE.Mesh(coreGeo, coreMat);
+    scene.add(core);
+
+    const glowGeo = new THREE.IcosahedronGeometry(0.85, 2);
+    const glowMat = new THREE.MeshBasicMaterial({ color: accent, transparent: true, opacity: 0.10 });
+    const glow = new THREE.Mesh(glowGeo, glowMat);
+    scene.add(glow);
+
+    const ringGroup = [];
+    [[1.7, 0.012, 0.55, Math.PI/2.3], [2.05, 0.008, -0.4, Math.PI/5]].forEach(([radius, tube, tiltX, tiltY], i) => {
+      const geo = new THREE.TorusGeometry(radius, tube, 10, 96);
+      const mat = new THREE.MeshBasicMaterial({ color: accent, transparent: true, opacity: 0.35 - i * 0.08 });
+      const ring = new THREE.Mesh(geo, mat);
+      ring.rotation.x = tiltX; ring.rotation.y = tiltY;
+      scene.add(ring);
+      ringGroup.push({ mesh: ring, speed: 0.0025 + i * 0.0012 });
+    });
+
+    const particleCount = 140;
+    const positions = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount; i++) {
+      const r = 1.9 + Math.random() * 1.1;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(Math.random() * 2 - 1);
+      positions[i*3] = r * Math.sin(phi) * Math.cos(theta);
+      positions[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+      positions[i*3+2] = r * Math.cos(phi);
+    }
+    const particleGeo = new THREE.BufferGeometry();
+    particleGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    const particleMat = new THREE.PointsMaterial({ color: accent, size: 0.025, transparent: true, opacity: 0.55 });
+    const particles = new THREE.Points(particleGeo, particleMat);
+    scene.add(particles);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+
+    let mouseX = 0, mouseY = 0;
+    container.addEventListener("mousemove", e => {
+      const rect = container.getBoundingClientRect();
+      mouseX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+      mouseY = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+    });
+
+    let rafId;
+    function animate() {
+      rafId = requestAnimationFrame(animate);
+      core.rotation.y += 0.0032; core.rotation.x += 0.0014;
+      glow.rotation.y -= 0.002;
+      ringGroup.forEach(r => { r.mesh.rotation.z += r.speed; });
+      particles.rotation.y += 0.0009;
+      camera.position.x += (mouseX * 0.6 - camera.position.x) * 0.04;
+      camera.position.y += (-mouseY * 0.4 - camera.position.y) * 0.04;
+      camera.lookAt(0, 0, 0);
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) cancelAnimationFrame(rafId); else animate();
+    });
+    window.addEventListener("resize", () => {
+      const w = container.clientWidth, h = container.clientHeight;
+      if (!w || !h) return;
+      camera.aspect = w / h; camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    });
+
+    twin3D = { coreMat, glowMat, particleMat, ringGroup };
+  } catch (e) {
+    console.warn("3D Digital Twin init failed (non-fatal), using CSS fallback:", e);
+    renderTwinFallback();
+  }
+}
+
+function renderTwinFallback() {
+  const container = document.getElementById("twin3d");
+  if (container) container.innerHTML = '<div class="twin-fallback"><div class="ring"></div></div>';
+}
+
+function updateTwin3DColor(hex) {
+  document.documentElement.style.setProperty("--risk-color", hex);
+  if (!twin3D) return;
+  try {
+    const c = new THREE.Color(hex);
+    twin3D.coreMat.color.set(c);
+    twin3D.glowMat.color.set(c);
+    twin3D.particleMat.color.set(c);
+    twin3D.ringGroup.forEach(r => r.mesh.material.color.set(c));
+  } catch (e) { /* non-fatal */ }
+}
+
+async function api(path, opts) {
+  const res = await fetch(API + path, opts);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || `${res.status} ${res.statusText}`);
+  }
+  return res.json();
+}
+
+function fmt(n, d = 0) { return (n === null || n === undefined || Number.isNaN(n)) ? "—" : Number(n).toFixed(d); }
+
+async function loadPatients() {
+  const patients = await api("/patients");
+  const list = document.getElementById("patientList");
+  list.innerHTML = "";
+  patients.forEach((p, i) => {
+    const btn = document.createElement("button");
+    btn.className = "patient-btn" + (i === 0 ? " active" : "");
+    btn.dataset.id = p.patient_id;
+    btn.innerHTML = `<span class="p-avatar">${p.patient_id.slice(-2)}</span>
+      <span><div>${p.patient_id}</div><div style="font-size:10.5px;color:var(--text-faint)">${p.age}y · HbA1c ${fmt(p.hba1c_pct,1)}%</div></span>`;
+    btn.onclick = () => selectPatient(p.patient_id);
+    list.appendChild(btn);
+  });
+  if (patients.length) selectPatient(patients[0].patient_id);
+}
+
+function setActivePatientBtn(id) {
+  document.querySelectorAll(".patient-btn").forEach(b => b.classList.toggle("active", b.dataset.id === id));
+}
+
+async function selectPatient(id) {
+  currentPatient = id;
+  setActivePatientBtn(id);
+  document.getElementById("patientId").textContent = id;
+  document.getElementById("patientName").textContent = "Loading…";
+
+  const [patient, twin, history] = await Promise.all([
+    api(`/patients/${id}`), api(`/patients/${id}/twin`), api(`/patients/${id}/history?limit=288`)
+  ]);
+
+  document.getElementById("patientName").textContent = `${patient.historical.diagnosis || "Patient"} — ${id}`;
+  document.getElementById("patientMeta").innerHTML = [
+    `${patient.demographics.sex}, ${patient.demographics.age}y`,
+    `BMI ${fmt(patient.demographics.bmi,1)}`,
+    `HbA1c ${fmt(patient.historical.hba1c_pct,1)}%`,
+    patient.historical.medication,
+  ].map(t => `<span>${t}</span>`).join("");
+
+  latestTwin = { timestamp: twin.timestamp, dynamic: twin.dynamic, derived: twin.derived };
+  renderTwin(twin);
+  try { renderChart(history); } catch (e) { console.warn("Chart render failed (non-fatal):", e); }
+  renderHistoryTable(history);
+
+  try {
+    const [pred, explain, recs] = await Promise.all([
+      api(`/patients/${id}/prediction`), api(`/patients/${id}/explain`).catch(()=>null), api(`/patients/${id}/recommendations`)
+    ]);
+    latestPred = pred;
+    renderRisk(pred);
+    try { addForecastPoint(pred.prediction.predicted_glucose_mgdl); } catch (e) { console.warn("Forecast point failed (non-fatal):", e); }
+    renderExplain(pred.risk, explain);
+    renderRecommendations(recs);
+  } catch (e) {
+    document.getElementById("riskCat").textContent = "Model not trained";
+    document.getElementById("riskPanel").style.setProperty("--risk-color", "#806F73");
+  }
+
+  try { await loadSimOptions(); } catch (e) { console.warn("Sim options failed (non-fatal):", e); }
+
+  // Prefetch the replay window in the background now, regardless of which
+  // tab is open. The FIRST computation of 288 real predictions for a patient
+  // takes several seconds (uncached); prefetching here means it's usually
+  // already warm by the time someone actually opens the Live Twin tab.
+  // ensureReplayLoaded() is idempotent per patient (checks replayLoadedFor).
+  stopReplay();
+  ensureReplayLoaded(id).catch(e => console.warn("Replay prefetch failed (non-fatal):", e));
+}
+
+function renderTwin(twin) {
+  document.getElementById("glucoseVal").textContent = fmt(twin.dynamic.glucose_mgdl);
+  document.getElementById("lastTs").textContent = twin.timestamp;
+  const dev = twin.derived.baseline_glucose_deviation_pct ?? 0;
+  const devEl = document.getElementById("baselineDev");
+  devEl.className = "dev " + (dev > 2 ? "up" : dev < -2 ? "down" : "flat");
+  devEl.textContent = `${dev >= 0 ? "+" : ""}${fmt(dev,1)}% vs. personal baseline`;
+
+  const tiles = document.querySelectorAll(".stat-tile .t-value");
+  tiles[0].textContent = fmt(twin.dynamic.heart_rate_bpm) + " bpm";
+  tiles[1].textContent = fmt(twin.dynamic.hrv_ms) + " ms";
+  tiles[2].textContent = twin.dynamic.activity_state;
+  tiles[3].textContent = twin.derived.sleep_minutes_prev_night ? Math.round(twin.derived.sleep_minutes_prev_night/6)/10 + " h" : "—";
+}
+
+const ARC_CIRCUMFERENCE = 2 * Math.PI * 52; // r=52, matches the SVG circle
+
+function renderRisk(pred) {
+  if (!pred || !pred.risk) return;
+  const cat = pred.risk.risk_category;
+  const color = RISK_COLOR[cat] || "#806F73";
+  const panel = document.getElementById("riskPanel");
+  updateTwin3DColor(color);
+  panel.classList.toggle("pulse", cat === "HIGH");
+
+  const probPct = Math.round(pred.prediction.excursion_probability * 100);
+  document.getElementById("riskPct").textContent = probPct + "%";
+  document.getElementById("riskCat").textContent = "Risk: " + cat;
+  document.getElementById("riskTrend").textContent = "Trend: " + pred.risk.trend;
+  document.getElementById("predGlucose").textContent = fmt(pred.prediction.predicted_glucose_mgdl);
+
+  const offset = ARC_CIRCUMFERENCE * (1 - Math.min(1, pred.prediction.excursion_probability));
+  document.getElementById("riskArc").style.strokeDashoffset = offset;
+}
+
+/* ---------------- Live Twin replay ---------------- */
+let replayFrames = [];
+let replayIdx = 0;
+let replayTimer = null;
+let replayChart = null;
+let replayLoadedFor = null;
+let replayInFlightFor = null;
+let replayInFlightPromise = null;
+
+async function ensureReplayLoaded(patientId) {
+  if (replayLoadedFor === patientId && replayFrames.length) return;
+  // a fetch for this exact patient is already running (e.g. background
+  // prefetch + the user clicking the tab before it resolved) — share it
+  // instead of firing a second, redundant 6-second computation.
+  if (replayInFlightFor === patientId && replayInFlightPromise) return replayInFlightPromise;
+
+  stopReplay();
+  const statusEl = document.getElementById("replayStatus");
+  statusEl.textContent = "Computing live replay — first load takes ~5-10s (288 real predictions)…";
+  statusEl.className = "loading";
+
+  replayInFlightFor = patientId;
+  replayInFlightPromise = api(`/patients/${patientId}/replay-frames`);
+  let frames;
+  try {
+    frames = await replayInFlightPromise;
+  } finally {
+    replayInFlightFor = null;
+    replayInFlightPromise = null;
+  }
+  replayFrames = frames;
+  replayLoadedFor = patientId;
+  replayIdx = 0;
+
+  const scrub = document.getElementById("replayScrub");
+  scrub.max = frames.length - 1;
+  scrub.value = 0;
+
+  try {
+    const labels = frames.map(f => f.timestamp.slice(11, 16));
+    const glucose = frames.map(f => f.dynamic.glucose_mgdl);
+    if (replayChart) replayChart.destroy();
+    replayChart = new Chart(document.getElementById("replayChart"), {
+      type: "line",
+      data: { labels, datasets: [{ data: glucose, borderColor: "#7A4955", borderWidth: 1.5, pointRadius: 0, tension: 0.25,
+        fill: true, backgroundColor: "rgba(122,73,85,0.08)" }] },
+      options: { responsive: true, maintainAspectRatio: false, animation: false,
+        plugins: { legend: { display: false } },
+        scales: { x: { grid: { display: false }, ticks: { color: "#806F73", maxTicksLimit: 8, font: { size: 9 } } },
+                  y: { grid: { color: "#E4D8D0" }, ticks: { color: "#806F73", font: { size: 9 } } } } }
+    });
+  } catch (e) {
+    console.warn("Replay chart render failed (non-fatal):", e);
+  }
+
+  document.getElementById("replayStatus").textContent =
+    `Loaded ${frames.length} real frames spanning ${frames[0].timestamp} → ${frames[frames.length-1].timestamp}. Press Play.`;
+  applyReplayFrame(0);
+}
+
+function applyReplayFrame(idx) {
+  if (!replayFrames.length) return;
+  idx = Math.max(0, Math.min(replayFrames.length - 1, idx));
+  replayIdx = idx;
+  const frame = replayFrames[idx];
+
+  renderTwin({ timestamp: frame.timestamp, dynamic: frame.dynamic, derived: frame.derived });
+  if (frame.prediction && frame.risk) {
+    renderRisk({ prediction: frame.prediction, risk: frame.risk });
+  }
+
+  document.getElementById("replayScrub").value = idx;
+  document.getElementById("replayTs").textContent = frame.timestamp;
+  const pct = (idx / (replayFrames.length - 1)) * 100;
+  document.getElementById("replayCursor").style.left = pct + "%";
+}
+
+function stopReplay() {
+  if (replayTimer) { clearInterval(replayTimer); replayTimer = null; }
+  document.getElementById("playBtn").textContent = "▶ Play";
+}
+
+function startReplay() {
+  if (!replayFrames.length) return;
+  if (replayIdx >= replayFrames.length - 1) replayIdx = 0;
+  document.getElementById("playBtn").textContent = "⏸ Pause";
+  const speed = Number(document.getElementById("replaySpeed").value);
+  replayTimer = setInterval(() => {
+    replayIdx++;
+    if (replayIdx >= replayFrames.length) { stopReplay(); return; }
+    applyReplayFrame(replayIdx);
+  }, speed);
+}
+
+document.getElementById("playBtn").addEventListener("click", () => {
+  if (replayTimer) stopReplay(); else startReplay();
+});
+document.getElementById("resetBtn").addEventListener("click", () => { stopReplay(); applyReplayFrame(0); });
+document.getElementById("replayScrub").addEventListener("input", e => { stopReplay(); applyReplayFrame(Number(e.target.value)); });
+document.getElementById("replaySpeed").addEventListener("change", () => { if (replayTimer) { stopReplay(); startReplay(); } });
+
+function renderExplain(risk, explain) {
+  const rf = document.getElementById("riskFactors");
+  rf.innerHTML = "";
+  risk.contributing_factors.forEach(f => {
+    const arrow = f.direction === "up" ? "↑" : f.direction === "down" ? "↓" : "→";
+    rf.innerHTML += `<div class="factor"><span class="arrow ${f.direction}">${arrow}</span><span>${f.text}</span></div>`;
+  });
+
+  const sf = document.getElementById("shapFactors");
+  const sm = document.getElementById("shapMethod");
+  if (explain) {
+    sf.innerHTML = "";
+    const maxAbs = Math.max(...explain.top_factors.map(f => Math.abs(f.contribution)), 0.0001);
+    explain.top_factors.forEach(f => {
+      const arrow = f.direction === "up" ? "↑" : "↓";
+      const pct = Math.round((Math.abs(f.contribution) / maxAbs) * 100);
+      const barColor = f.direction === "up" ? "var(--high)" : "var(--teal)";
+      sf.innerHTML += `<div class="factor shap-factor">
+        <span class="arrow ${f.direction}">${arrow}</span>
+        <div style="flex:1;">
+          <div style="display:flex; justify-content:space-between; font-size:13px;">
+            <span>${f.label}</span>
+            <span class="mono" style="color:var(--text-faint); font-size:11.5px;">${f.contribution.toFixed(3)}</span>
+          </div>
+          <div class="shap-bar-track"><div class="shap-bar-fill" style="width:${pct}%; background:${barColor};"></div></div>
+        </div>
+      </div>`;
+    });
+    sm.textContent = "Method: " + explain.method;
+  } else {
+    sf.innerHTML = '<div class="empty">Explainability unavailable.</div>';
+  }
+}
+
+function renderRecommendations(recs) {
+  const el = document.getElementById("recList");
+  el.innerHTML = "";
+  recs.forEach(r => {
+    el.innerHTML += `<div class="rec ${r.priority}"><span class="dot"></span>
+      <div><div class="rtext">${r.recommendation}</div><div class="rreason">${r.reason}</div></div></div>`;
+  });
+}
+
+function renderChart(history) {
+  const labels = history.map(h => h.timestamp.slice(5, 16));
+  const data = history.map(h => h.dynamic.glucose_mgdl);
+  if (chart) chart.destroy();
+  chart = new Chart(document.getElementById("glucoseChart"), {
+    type: "line",
+    data: { labels, datasets: [{ data, borderColor: "#7A4955", borderWidth: 1.75, pointRadius: 0, tension: 0.3,
+      fill: true, backgroundColor: "rgba(122,73,85,0.10)" }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { display: false },
+        y: { grid: { color: "#E4D8D0" }, ticks: { color: "#806F73", font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+function addForecastPoint(predictedGlucose) {
+  // Extends the existing glucose chart with a dashed violet segment to the
+  // AI-predicted +2h point. Purely visual — reads a value already fetched
+  // by the existing /prediction call, doesn't change what's computed.
+  if (!chart || predictedGlucose == null) return;
+  try {
+    const baseData = chart.data.datasets[0].data;
+    const forecastLabels = [...chart.data.labels.filter(l => l !== "+2h"), "+2h"];
+    const trimmedBase = baseData.filter((_, i) => chart.data.labels[i] !== "+2h");
+    const forecastDataset = {
+      label: "Forecast",
+      data: new Array(trimmedBase.length - 1).fill(null).concat([trimmedBase[trimmedBase.length - 1], predictedGlucose]),
+      borderColor: "#B77B89", borderDash: [4, 3], borderWidth: 1.75,
+      pointRadius: (ctx) => (ctx.dataIndex === forecastLabels.length - 1 ? 4 : 0),
+      pointBackgroundColor: "#B77B89", fill: false, tension: 0,
+    };
+    chart.data.labels = forecastLabels;
+    chart.data.datasets[0].data = [...trimmedBase, null];
+    chart.data.datasets = chart.data.datasets.filter(d => d.label !== "Forecast");
+    chart.data.datasets.push(forecastDataset);
+    chart.update();
+  } catch (e) {
+    console.warn("Forecast point render failed (non-fatal):", e);
+  }
+}
+
+function renderHistoryTable(history) {
+  const body = document.getElementById("historyBody");
+  const rows = history.slice(-50).reverse();
+  body.innerHTML = rows.map(h => `<tr>
+    <td>${h.timestamp}</td><td>${fmt(h.dynamic.glucose_mgdl)}</td><td>${fmt(h.dynamic.heart_rate_bpm)}</td>
+    <td>${fmt(h.dynamic.hrv_ms)}</td><td>${fmt(h.dynamic.steps)}</td><td>${h.dynamic.activity_state}</td></tr>`).join("");
+}
+
+async function loadSimOptions() {
+  simOptions = await api(`/patients/${currentPatient}/simulate-options`);
+  const el = document.getElementById("simControls");
+  el.innerHTML = "";
+  Object.entries(simOptions).forEach(([key, spec]) => {
+    el.innerHTML += `<div class="slider-row">
+      <label>${spec.label} <span class="slider-val mono" id="val-${key}">${spec.default}</span></label>
+      <input type="range" id="slider-${key}" min="${spec.min}" max="${spec.max}" step="${spec.step}" value="${spec.default}">
+    </div>`;
+  });
+  Object.keys(simOptions).forEach(key => {
+    document.getElementById(`slider-${key}`).addEventListener("input", e => {
+      document.getElementById(`val-${key}`).textContent = e.target.value;
+    });
+  });
+}
+
+document.getElementById("runSimBtn").addEventListener("click", async () => {
+  const overrides = {};
+  Object.keys(simOptions || {}).forEach(key => {
+    const val = Number(document.getElementById(`slider-${key}`).value);
+    if (val !== simOptions[key].default) overrides[key] = val;
+  });
+  const wrap = document.getElementById("simResultWrap");
+  if (!Object.keys(overrides).length) {
+    wrap.innerHTML = '<div class="empty">Move at least one slider away from its default first.</div>';
+    return;
+  }
+  wrap.innerHTML = '<div class="loading">Running simulation…</div>';
+  try {
+    const result = await api(`/patients/${currentPatient}/simulate`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ overrides })
+    });
+    wrap.innerHTML = `<div class="sim-result" style="animation:fadeSlideIn .4s ease;">
+      <div class="sim-card"><h4>Baseline</h4>
+        <div class="v">${fmt(result.baseline.prediction.predicted_glucose_mgdl)} mg/dL</div>
+        <div class="r" style="color:${RISK_COLOR[result.baseline.risk.risk_category]}">${result.baseline.risk.risk_category} · ${Math.round(result.baseline.prediction.excursion_probability*100)}%</div>
+      </div>
+      <div class="sim-card sim-sim"><h4>Simulated</h4>
+        <div class="v">${fmt(result.simulated.prediction.predicted_glucose_mgdl)} mg/dL</div>
+        <div class="r" style="color:${RISK_COLOR[result.simulated.risk.risk_category]}">${result.simulated.risk.risk_category} · ${Math.round(result.simulated.prediction.excursion_probability*100)}%</div>
+      </div>
+    </div>
+    <div class="sim-disclaimer">⚠ ${result.disclaimer}</div>`;
+  } catch (e) {
+    wrap.innerHTML = `<div class="empty">Simulation failed: ${e.message}</div>`;
+  }
+});
+
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const leavingLive = document.querySelector(".tab-btn[data-tab='live']").classList.contains("active");
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+
+    if (btn.dataset.tab === "live" && currentPatient) {
+      ensureReplayLoaded(currentPatient);
+    } else if (leavingLive) {
+      // restore the patient's real current state in the hero panels
+      stopReplay();
+      if (latestTwin) renderTwin(latestTwin);
+      if (latestPred) renderRisk(latestPred);
+    }
+  });
+});
+
+initTwin3D();
+loadPatients().catch(e => {
+  document.getElementById("patientList").innerHTML = `<div class="empty">Could not reach API at ${API}.<br>Is it running? (uvicorn src.api.main:app --port 8000)<br><span class="mono" style="font-size:10px">${e.message}</span></div>`;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+patient_id,age,sex,bmi,data_source
+VT001,38,F,30.0,synthetic
+VT002,60,F,37.8,synthetic
+VT003,45,F,35.1,synthetic
+VT004,70,F,34.9,synthetic
+VT005,47,M,33.7,synthetic
+VT006,65,M,25.2,synthetic
+VT007,53,F,25.2,synthetic
+VT008,59,F,23.5,synthetic
