@@ -4,7 +4,13 @@
 Submission for the **Happiest Health Digital Twin Challenge 2026**
 ## Demo Video
 
-[Watch the VitaTwin AI Demo] https://youtu.be/cvqcT4VwzKY
+[Watch the VitaTwin AI Demo] https://youtu.be/zAIUfLt0NFo
+
+## Project ppt
+https://docs.google.com/presentation/d/17oAaOK_0mSN_eWa_EXUBHH11QV_l-B-R3xlaz5cIyWY/edit?usp=sharing
+
+## Project architecture diagram pdf 
+
 
 > ⚠️ **This is a research/educational prototype.** It is not a medical
 > diagnosis system, does not replace doctors, and does not provide
