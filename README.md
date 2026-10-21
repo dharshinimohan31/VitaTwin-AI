@@ -2,6 +2,9 @@
 ### *Predict. Simulate. Prevent.*
 
 Submission for the **Happiest Health Digital Twin Challenge 2026**
+## Demo Video
+
+[Watch the VitaTwin AI Demo] https://youtu.be/cvqcT4VwzKY
 
 > ⚠️ **This is a research/educational prototype.** It is not a medical
 > diagnosis system, does not replace doctors, and does not provide
